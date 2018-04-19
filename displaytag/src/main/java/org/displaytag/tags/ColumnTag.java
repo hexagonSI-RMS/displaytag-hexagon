@@ -27,6 +27,8 @@
  *
  *  28 Sept 2015 - Set "escapeXml" to true by default.
  *  
+ *  13 March 2018 - Added ability to customize the order of table columns
+ *  
  */
 package org.displaytag.tags;
 
@@ -461,6 +463,8 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
     public void setUrl(String value)
     {
         HttpServletRequest req = (HttpServletRequest) pageContext.getRequest();
+        if (Boolean.TRUE.equals(req.getAttribute("inCustomizationMode")))
+            return;
         // call encodeURL to preserve session id when cookies are disabled
         String encodedHref = ((HttpServletResponse) this.pageContext.getResponse()).encodeURL(StringUtils
             .defaultString(req.getContextPath() + value));

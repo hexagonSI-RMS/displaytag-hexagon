@@ -6,7 +6,7 @@ The following files within the distribution have been modified.
 File | Changes
 --- | ---
 /displaytag/src/main/java/org/displaytag/render/SecurityService.java | New file; implements support for "securing" rows of data so unauthorized users cannot see/export them
-/displaytag/src/main/java/org/displaytag/tags/TableTag.java | DISPL-409: wrong sorting column in export; DISPL-439: additional wildcard featrures; change to support "securing" rows of data so unauthorized users cannot see/export them
+/displaytag/src/main/java/org/displaytag/tags/TableTag.java | DISPL-409: wrong sorting column in export; DISPL-439: additional wildcard featrures; change to support "securing" rows of data so unauthorized users cannot see/export them; ability to change column order of table
 /displaytag/src/main/java/org/displaytag/render/TableWriterTemplate.java | DISPL-611: Column text should not be abbreviated in PDF/Excel export when maxLength is set; change to support "securing" rows of data so unauthorized users cannot see/export them
 /displaytag/src/main/java/org/displaytag/util/LookupUtil.java | DISPL-611: Column text should not be abbreviated in PDF/Excel export when maxLength is set
 /displaytag/src/test/java/org/displaytag/jsptests/Displ611Test.java | DISPL-611: Column text should not be abbreviated in PDF/Excel export when maxLength is set
@@ -29,3 +29,4 @@ File | Changes
 /displaytag/src/main/java/org/displaytag/render/HtmlTableWriter.java | DISPL-242: Add support for "grouped" table headers
 /displaytag/src/main/java/org/displaytag/tags/ColumnTagBeanInfo.java | DISPL-242: Add support for "grouped" table headers
 /displaytag/src/main/java/org/displaytag/util/TagConstants.java | DISPL-242: Add support for "grouped" table headers
+/displaytag/src/main/java/org/displaytag/tags/ColumnTag.java | Ability to change column order of table.

@@ -24,6 +24,8 @@
  *  27  Jan 2017 - Refactored implementation of security so it is compatible
  *     with Hibernate proxies 
  *
+ *  13 March 2018 - Added ability to customize order of table columns
+ *
  */
  
 package org.displaytag.tags;
@@ -32,20 +34,25 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.JspWriter;
+
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.LongRange;
 import org.apache.commons.lang.math.NumberUtils;
@@ -64,7 +71,6 @@ import org.displaytag.export.ExportViewFactory;
 import org.displaytag.export.TextExportView;
 import org.displaytag.model.Cell;
 import org.displaytag.model.Column;
-import org.displaytag.model.ColumnIterator;
 import org.displaytag.model.HeaderCell;
 import org.displaytag.model.Row;
 import org.displaytag.model.RowIterator;
@@ -86,6 +92,8 @@ import org.displaytag.util.RequestHelper;
 import org.displaytag.util.RequestHelperFactory;
 import org.displaytag.util.TagConstants;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * This tag takes a list of objects and creates a table to display those objects. With the help of column tags, you
@@ -96,6 +104,7 @@ import org.displaytag.util.TagConstants;
  * @author Fabrizio Giustina
  * @version $Revision: 1144 $ ($Author: fgiust $)
  */
+@SuppressWarnings("all")
 public class TableTag extends HtmlTableTag
 {
 
@@ -1374,6 +1383,16 @@ public class TableTag extends HtmlTableTag
         	}
         }
 
+        /** apply customizations if there's a custom configurations */
+		String custom_config_attribute_key = "custom_grid_config";
+		JsonObject customizations = (JsonObject) pageContext.getRequest().getAttribute(custom_config_attribute_key);
+		if (customizations != null) {
+			String tableId = this.getUid();
+			JsonObject configForTable = (JsonObject) customizations.get(tableId);
+			if (configForTable != null)
+				applyCustomizations(configForTable);
+		}
+
         // check for nested tables
         // Object previousMediaType = this.pageContext.getAttribute(PAGE_ATTRIBUTE_MEDIA);
         Object previousMediaType = this.pageContext.getAttribute(PAGE_ATTRIBUTE_MEDIA);
@@ -1404,6 +1423,92 @@ public class TableTag extends HtmlTableTag
         return returnValue;
     }
 
+    /**
+	 *  The configForTable JsonObject has the following structure:
+	 * {
+		"tableId": {
+				"cotsColumnTitle": {
+					"displayOrder": 0
+				},
+				"cotsColumnTitle": {
+					"displayOrder": 1
+				},
+				...
+			}
+		}
+	 e.g.:
+	 	{
+		"accident": {
+				"Accident Number": {
+					"displayOrder": 0
+				},
+				"Location Accident Occurred": {
+					"displayOrder": 1
+				},
+				..
+			}
+		}
+	 */
+    private void applyCustomizations(JsonObject configForTable) {
+    	Map<String, Integer> customOrder = new LinkedHashMap<String, Integer>();
+		
+		for (Map.Entry<String, JsonElement> en : configForTable.entrySet()) {
+			String columnTitle = en.getKey();
+			JsonObject colConfig = en.getValue().getAsJsonObject();
+			int displayOrder = colConfig.getAsJsonPrimitive("displayOrder").getAsInt();
+			customOrder.put(StringEscapeUtils.unescapeHtml(columnTitle), displayOrder);
+		}
+		
+		// reorder header:
+		List reorderedHeaderCellList = new ArrayList();
+		List headerCellList = getTableModel().getHeaderCellList();
+		
+		Map<String, Integer> originalColumnIndex = new LinkedHashMap();
+		for (Map.Entry<String, Integer> entry : customOrder.entrySet()) {
+			int originalIndex = getHeaderCellIndex(entry.getKey(), headerCellList);
+			if (originalIndex != -1) {
+				reorderedHeaderCellList.add(headerCellList.get(originalIndex));
+				originalColumnIndex.put(entry.getKey(), originalIndex);
+			}
+		}
+		
+		this.tableModel.getHeaderCellList().clear();
+		this.tableModel.getHeaderCellList().addAll(reorderedHeaderCellList);
+		
+		
+		// reorder rows:
+		for (Object rowObj : getTableModel().getRowListFull()) {
+			Row row = (Row) rowObj;
+			List originalCellList = row.getCellList();
+			List reorderedCellList = new ArrayList();
+			
+			for (Map.Entry<String, Integer> entry : customOrder.entrySet()) {
+				if (originalColumnIndex.containsKey(entry.getKey())) {
+					int originalIndex = originalColumnIndex.get(entry.getKey());
+					if (originalIndex != -1)
+						reorderedCellList.add(originalCellList.get(originalIndex));
+				}
+			}
+			
+			row.getCellList().clear();
+			row.getCellList().addAll(reorderedCellList);
+		}
+    }
+    
+    private int getHeaderCellIndex(String title, List headerCellList ) {
+    	for (int i = 0; i < headerCellList.size(); i++) {
+    		HeaderCell cell = (HeaderCell) headerCellList.get(i);
+    		String headerCellTitle = cell.getTitle();
+    		if (StringUtils.indexOf(title, "<div>Select</div>") != -1 && StringUtils.indexOf(headerCellTitle, "<div>Select</div>") != -1) {
+    			return i;
+    		}
+    		else if (StringUtils.equalsIgnoreCase(title, headerCellTitle))
+    			return i;
+    	}
+    	return -1;
+    }
+    
+    
     /**
      * Returns the name of the table decorator that should be applied to this table, which is either the decorator
      * configured in the property "decorator", or if none is configured in said property, a decorator configured with
@@ -1713,6 +1818,7 @@ public class TableTag extends HtmlTableTag
         this.tableModel.setPageOffset(pageOffset);
     }
 
+    private String customizationLink = "<a id=\"cog_%s\" class=\"gridcog\"><img src=\"%s/themes/default/images/icons/cog.png\"/>Customize Grid</a>";
     /**
      * Uses HtmlTableWriter to write table called when data have to be displayed in a html page.
      * @throws JspException generic exception
@@ -1727,6 +1833,7 @@ public class TableTag extends HtmlTableTag
             this.addClass(css);
         }
         // use HtmlTableWriter to write table
+        HtmlTableWriter writer = 
         new HtmlTableWriter(
             this.tableModel,
             this.properties,
@@ -1738,12 +1845,16 @@ public class TableTag extends HtmlTableTag
             this.listHelper,
             this.pagesize,
             getAttributeMap(),
-            this.uid).writeTable(this.tableModel, this.getUid());
+            this.uid);
+        writer.writeTable(this.tableModel, this.getUid());
 
         if (this.varTotals != null)
         {
             pageContext.setAttribute(this.varTotals, getTotals());
         }
+        
+        if (Boolean.TRUE.equals(this.pageContext.getRequest().getAttribute("show_customization_icon")))
+        	writer.write(String.format(customizationLink, this.uid, ((HttpServletRequest)pageContext.getRequest()).getContextPath()));
     }
 
     /**

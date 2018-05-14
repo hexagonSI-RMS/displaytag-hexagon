@@ -16,7 +16,7 @@
  *
  *  29 July 2014 - extended the security feature to be applicable to
  *        text exports of table contents.
- *  
+ *
  */
  
 package org.displaytag.model;
@@ -72,6 +72,11 @@ public class Column
      * Cell.
      */
     private Cell cell;
+
+    // this is for adding the cell to the list in the header cell
+    public Cell getCell() {
+		return cell;
+	}
 
     /**
      * Constructor for Column.

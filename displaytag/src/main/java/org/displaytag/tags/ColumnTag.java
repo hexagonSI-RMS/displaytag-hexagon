@@ -28,11 +28,12 @@
  *  28 Sept 2015 - Set "escapeXml" to true by default.
  *  
  *  13 March 2018 - Added ability to customize the order of table columns
- *  
+ *
+ *  27 April 2018 - Additional changes for column order customization and
+ *        customizing set of columns displayed.  
  */
 package org.displaytag.tags;
 
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -56,7 +57,7 @@ import org.displaytag.exception.InvalidTagAttributeValueException;
 import org.displaytag.exception.ObjectLookupException;
 import org.displaytag.exception.TagStructureException;
 import org.displaytag.model.Cell;
-import org.displaytag.model.DefaultComparator;
+import org.displaytag.model.CustomColumnData;
 import org.displaytag.model.HeaderCell;
 import org.displaytag.properties.MediaTypeEnum;
 import org.displaytag.properties.SortOrderEnum;
@@ -269,6 +270,9 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
      */
     private String groupTitleKey;
 
+    // customization done in application
+    private CustomColumnData customColumnData;
+    
     /**
      * Setter for totals.
      * @param totals the value
@@ -676,9 +680,20 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
             addHeaderToTable(tableTag);
         }
 
-        if (!tableTag.isIncludedRow())
+        customColumnData = DataGridCustomiztionUtil.getCustomColumnDataByCotsTitle(tableTag.getTableModel().getWebrmsCustomTableData(), getEvalTitle(tableTag));
+        
+        /** no need to process this column if it's hidden through UI customization */
+        if (!tableTag.isIncludedRow() || (customColumnData != null && customColumnData.isHidden()))
         {
             return super.doEndTag();
+        }
+
+        if (customColumnData != null) {
+        	// these are for displays:
+        	if (customColumnData.getSortOnProperty() == null) 
+        		customColumnData.setSortOnProperty(this.sortProperty); 
+        	if (this.bodyContent != null && customColumnData.getPropertyName() == null)
+        		customColumnData.setPropertyName("JSP");
         }
 
         Cell cell = null;
@@ -719,15 +734,8 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
         return super.doEndTag();
     }
 
-    /**
-     * Adds the current header to the table model calling addColumn in the parent table tag. This method should be
-     * called only at first iteration.
-     * @param tableTag parent table tag
-     * @throws DecoratorInstantiationException for error during column decorator instantiation
-     * @throws ObjectLookupException for errors in looking up values
-     */
-    private void addHeaderToTable(TableTag tableTag) throws DecoratorInstantiationException, ObjectLookupException
-    {
+    // this is the same snippet from addHeaderToTable, copied with no modifications
+    private String getEvalTitle(TableTag tableTag) {
         // don't modify "title" directly
         String evalTitle = this.title;
 
@@ -740,6 +748,27 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
                 this.property,
                 tableTag,
                 this.pageContext);
+        }
+	    return evalTitle;
+    }
+    
+
+    /**
+     * Adds the current header to the table model calling addColumn in the parent table tag. This method should be
+     * called only at first iteration.
+     * @param tableTag parent table tag
+     * @throws DecoratorInstantiationException for error during column decorator instantiation
+     * @throws ObjectLookupException for errors in looking up values
+     */
+    public void addHeaderToTable(TableTag tableTag) throws DecoratorInstantiationException, ObjectLookupException
+    {
+    	String evalTitle = getEvalTitle(tableTag);
+        customColumnData = DataGridCustomiztionUtil.getCustomColumnDataByCotsTitle(tableTag.getTableModel().getWebrmsCustomTableData(), evalTitle);
+        
+        /** no need to process this column if it's hidden through UI customization */
+        if (customColumnData != null) {
+        	if (customColumnData.isHidden())
+        		return;
         }
 
         HeaderCell headerCell = new HeaderCell();

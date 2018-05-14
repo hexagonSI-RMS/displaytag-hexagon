@@ -17,13 +17,16 @@
  *  18 July 2013 - Solve issue DISPL-242 - Added support for "grouped"
  *        table headers by adding two new attributes: groupTitle 
  *        and groupTitleKey
- *  
+ *
+ *  28 April 2013 - Added ability to customize set of columns
+ *        and their order.  
  */
 package org.displaytag.render;
 
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.jsp.JspException;
@@ -37,6 +40,7 @@ import org.displaytag.exception.DecoratorException;
 import org.displaytag.exception.ObjectLookupException;
 import org.displaytag.exception.WrappedRuntimeException;
 import org.displaytag.model.Column;
+import org.displaytag.model.CustomColumnData;
 import org.displaytag.model.HeaderCell;
 import org.displaytag.model.Row;
 import org.displaytag.model.TableModel;
@@ -46,6 +50,7 @@ import org.displaytag.properties.MediaTypeEnum;
 import org.displaytag.properties.SortOrderEnum;
 import org.displaytag.properties.TableProperties;
 import org.displaytag.tags.CaptionTag;
+import org.displaytag.tags.DataGridCustomiztionUtil;
 import org.displaytag.tags.TableTagParameters;
 import org.displaytag.util.Anchor;
 import org.displaytag.util.Href;
@@ -477,6 +482,7 @@ public class HtmlTableWriter extends TableWriterAdapter
             // title
             String header = headerCell.getTitle();
 
+            if (!this.tableModel.isInUICustomizationMode()) {
             // column is sortable, create link
             if (headerCell.getSortable())
             {
@@ -486,11 +492,25 @@ public class HtmlTableWriter extends TableWriterAdapter
                 // append to buffer
                 header = anchor.toString();
             }
+            }
 
             write(header);
+            
+            // write the customization controls only in UICustomizationMode:
+            if (this.tableModel.isInUICustomizationMode() && !this.tableModel.isCustomizationDisabled()) {
+	            write(DataGridCustomiztionUtil.getDisplayOrder(headerCell));
+	            write(DataGridCustomiztionUtil.getEditControl(headerCell));
+            }
             write(headerCell.getHeaderCloseTag());
         }
 
+        if (this.tableModel.isInUICustomizationMode()) {
+        	// this saves a db query to render the hidden columns:
+        	write("<th style='display: none;'>");
+        	write(DataGridCustomiztionUtil.getEditControlsForHiddenColumns(tableModel.getWebrmsCustomTableData()));
+        	write("</th>");
+        }
+        
         // close tr
         write(TagConstants.TAG_TR_CLOSE);
 

@@ -18,10 +18,13 @@
  *        table headers by adding two new attributes: groupTitle 
  *        and groupTitleKey
  *  
+ *  27 April 2018 - Ability to customize columns displayed and their order.
  */
 package org.displaytag.model;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.commons.beanutils.Converter;
 import org.apache.commons.lang.StringUtils;
@@ -46,6 +49,18 @@ import org.displaytag.util.TagConstants;
  */
 public class HeaderCell
 {
+    // customizations entered in application
+    private CustomColumnData customColumnData;
+    // this is used to re-order columns based on display order entered through 
+    // application customizations, the column's cell data just go with the header, one for each row
+    private List<Cell> cellList = new ArrayList<Cell>();
+    
+    public Cell getCellAtRow(int index) {
+    	if (cellList != null && index < cellList.size())
+    		return cellList.get(index);
+    	throw new RuntimeException("invalid index for getting cell!");
+    }
+    
 
     /**
      * Map containing the html tag attributes for cells (td).
@@ -327,6 +342,11 @@ public class HeaderCell
         this.alreadySorted = true;
     }
 
+    public void clearAlreadySorted()
+    {
+        this.alreadySorted = false;
+    }
+    
     /**
      * Getter for the column number.
      * @return int column number
@@ -704,6 +724,15 @@ public class HeaderCell
                 throw new RuntimeException(e);
             }
         }
+        
+        this.cellList.add(column.getCell());
     }
 
+	public CustomColumnData getCustomColumnData() {
+		return customColumnData;
+    }
+
+	public void setCustomColumnData(CustomColumnData customColumnData) {
+		this.customColumnData = customColumnData;
+	}
 }

@@ -17,24 +17,32 @@
  *  18 July 2013 - Solve issue DISPL-242 - Added support for "grouped"
  *        table headers by adding two new attributes: groupTitle 
  *        and groupTitleKey
- *  
+ *
+ *  27 April 2018 - Add ability to customize set of columns and their order  
  */
 package org.displaytag.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.jsp.PageContext;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.displaytag.decorator.DisplaytagColumnDecorator;
+import org.displaytag.decorator.EscapeXmlColumnDecorator;
 import org.displaytag.decorator.TableDecorator;
 import org.displaytag.properties.MediaTypeEnum;
 import org.displaytag.properties.TableProperties;
+import org.displaytag.tags.TableTag;
+import org.displaytag.util.HtmlAttributeMap;
 
 
 /**
@@ -42,8 +50,14 @@ import org.displaytag.properties.TableProperties;
  * @author Fabrizio Giustina
  * @version $Revision: 1125 $ ($Author: fgiust $)
  */
+@SuppressWarnings("all")
 public class TableModel
 {
+	private boolean customizationDisabled;
+	CustomTableData applicationCustomTableData;
+	private boolean isInUICustomizationMode; // carry this so we write out customizationControls only in UICustomizationMode
+	private String defaultTableSortProperty;
+	private String paginatedListSortProperty;
 
     /**
      * logger.
@@ -161,6 +175,132 @@ public class TableModel
         this.pageContext = pageContext;
     }
 
+    private boolean isConfiguredDefaultTableSortColumn(HeaderCell headerCell) {
+    	String sortedProperty = this.paginatedListSortProperty != null ? this.paginatedListSortProperty : this.defaultTableSortProperty;
+    	
+    	if (sortedProperty != null ) {
+			if (headerCell.getSortProperty() != null)
+				return StringUtils.equalsIgnoreCase(headerCell.getSortProperty(), sortedProperty);
+			else
+				return StringUtils.equalsIgnoreCase(headerCell.getBeanPropertyName(), sortedProperty);
+    	}
+    	return false;
+    }
+    
+    public void applyApplicationCustomizations(Comparator defaultColumnComparator) {
+    	if (this.applicationCustomTableData == null) return;
+    	
+    	// reorder headers:
+    	
+    	Map<String, HeaderCell> headerCellByCotsTitle = sortHeaderCellsByTitle();
+		List<HeaderCell> newHeaderCellList = new ArrayList<>();
+		
+		for (CustomColumnData colConfig : applicationCustomTableData.getVisibleColumnList()) {
+			HeaderCell headerCell = colConfig.getIsAdded() 
+									? createHeaderCell(colConfig, defaultColumnComparator)
+									: headerCellByCotsTitle.get(colConfig.getCotsTitle());
+									
+			// column is not available for the media type (as an improvement, can set a ref to the unavailable columns at ColumnTag.doEndTag)
+			if (headerCell == null) 
+				continue;
+			
+			// change COTS header cell titles if there's a customized one:
+			if (!colConfig.getIsAdded()
+				&& StringUtils.isNotBlank(colConfig.getCustomTitle()) 
+				&& !StringUtils.equals(colConfig.getCotsTitle(), colConfig.getCustomTitle())) {
+				
+				headerCell.setTitle(colConfig.getCustomTitle());
+			}
+			
+			headerCell.setCustomColumnData(colConfig);
+			
+			newHeaderCellList.add(headerCell);
+		}
+		
+		// set default table sort, this just marks the table header cell with the sorted style for display:
+		for (int i = 0; i < newHeaderCellList.size(); i++) {
+			HeaderCell headerCell = newHeaderCellList.get(i);
+			if (isLocalSort()) {
+				if (sortedColumn == i) 
+					headerCell.setAlreadySorted();
+				else
+					headerCell.clearAlreadySorted();
+			}
+			else { // paginated sort:
+				if (isConfiguredDefaultTableSortColumn(headerCell))
+					headerCell.setAlreadySorted();
+				else
+					headerCell.clearAlreadySorted();
+			}
+		}
+		
+		this.headerCellList = newHeaderCellList;
+		
+		// reorder columns:
+		for (int rowIndex = 0; rowIndex < rowListFull.size(); rowIndex++) {
+			 Row currentRow = (Row) rowListFull.get(rowIndex);
+			 // System.out.println("reordering row: "  + currentRow.getRowNumber());
+		 
+			 List<Cell> newCellList = new ArrayList<Cell>(headerCellList.size());
+			 
+			 for (int columnNumber = 0; columnNumber < headerCellList.size(); columnNumber++) {
+				 HeaderCell header = (HeaderCell) headerCellList.get(columnNumber);
+				 header.setColumnNumber(columnNumber);
+				 // System.out.println("columnNumber: " + columnNumber, header.getBeanPropertyName: " + header.getBeanPropertyName());
+			    
+				 if (!header.getCustomColumnData().getIsAdded()) { 
+					 // COTS column, cell data is already evaluated if there's body content (JSP), so copy it over
+					 Cell cell = header.getCellAtRow(rowIndex); 
+					 newCellList.add(cell);
+				 }
+				 else {
+				 	// custom column, data fetched on writing out cell content
+		        	newCellList.add(getEmptyCell());
+				 }
+			 }
+			   
+			 currentRow.getCellList().clear();
+			 currentRow.getCellList().addAll(newCellList);
+		}
+    }
+    
+    private Cell getEmptyCell() {
+    	Cell cell = new Cell(null);
+    	HtmlAttributeMap attributes = new HtmlAttributeMap();
+    	attributes.put("class", "result");
+    	cell.setPerRowAttributes(attributes);
+    	return cell;
+    }
+    
+    
+    private HeaderCell createHeaderCell(CustomColumnData colConfig, Comparator defaultColumnComparator) {
+        HeaderCell headerCell = new HeaderCell();
+        headerCell.setHeaderAttributes(new HtmlAttributeMap());
+        headerCell.setHtmlAttributes(new HtmlAttributeMap());
+        headerCell.setTitle(colConfig.getTitle());
+        headerCell.setSortable(colConfig.getSortable());
+        headerCell.setBeanPropertyName(colConfig.getPropertyName());
+        headerCell.setMaxLength(colConfig.getMaxLength());
+        headerCell.setSortProperty(colConfig.getSortOnProperty());
+        headerCell.setColumnDecorators(new DisplaytagColumnDecorator[] {EscapeXmlColumnDecorator.INSTANCE});
+    	headerCell.setComparator(defaultColumnComparator);
+        return headerCell;
+    }
+    
+	private Map<String, HeaderCell> sortHeaderCellsByTitle() {
+		Map<String, HeaderCell> headerCellsByTitle = new HashMap<>();
+    	for (Object header : headerCellList) {
+    		HeaderCell headerCell = (HeaderCell) header;
+    		headerCellsByTitle.put(headerCell.getTitle(), headerCell);
+    	}
+    	return headerCellsByTitle;
+    }
+	
+//    private boolean isSelectBox(String title) {
+//    	return StringUtils.indexOf(title, "<div>Select</div>") != -1;
+//    }
+    
+    
     /**
      * Returns the jsp page context.
      * @return page context
@@ -371,11 +511,28 @@ public class TableModel
      */
     public HeaderCell getSortedColumnHeader()
     {
+    	if (this.localSort) {
+    		// this applies application customization of the default table sort property:
+    		if (sortedColumn == -1) { // this is when the user never clicked on any table header to sort it yet
+    			if (this.defaultTableSortProperty != null) {
+			    	for (int i = 0; i < headerCellList.size(); i++) {
+			    		HeaderCell headerCell = (HeaderCell) headerCellList.get(i);
+						if (isConfiguredDefaultTableSortColumn(headerCell)) {
+							setSortedColumnNumber(i);
+							return headerCell;
+						}
+					}
+			    	return null;
+    			}
+    		}
         if (this.sortedColumn < 0 || (this.sortedColumn > (this.headerCellList.size() - 1)))
         {
             return null;
         }
         return (HeaderCell) this.headerCellList.get(this.sortedColumn);
+    	} else {
+    		return null;
+    	}
     }
 
     /**
@@ -706,4 +863,49 @@ public class TableModel
             .toString();
     }
 
+	
+    public CustomTableData getApplicationCustomTableData() {
+		return applicationCustomTableData;
+	}
+
+	public void setApplicationCustomTableData(CustomTableData applicationCustomTableData) {
+		this.applicationCustomTableData = applicationCustomTableData;
+	}
+
+    public boolean isInUICustomizationMode() {
+		return isInUICustomizationMode;
+	}
+
+	public void setInUICustomizationMode(boolean isInUICustomizationMode) {
+		this.isInUICustomizationMode = isInUICustomizationMode;
+	}
+
+	public String getDefaultTableSortProperty() {
+		return defaultTableSortProperty;
+	}
+
+	public void setDefaultTableSortProperty(String defaultTableSortProperty) {
+		this.defaultTableSortProperty = defaultTableSortProperty;
+	}
+
+	public Integer getDefaultTableSortColumnIndex() {
+		if (this.applicationCustomTableData == null) return null;
+		return applicationCustomTableData.getDefaultTableSortColumnIndex();
+	}
+
+	public String getPaginatedListSortProperty() {
+		return paginatedListSortProperty;
+	}
+
+	public void setPaginatedListSortProperty(String paginatedListSortProperty) {
+		this.paginatedListSortProperty = paginatedListSortProperty;
+	}
+
+	public boolean isCustomizationDisabled() {
+		return customizationDisabled;
+	}
+
+	public void setCustomizationDisabled(boolean customizationDisabled) {
+		this.customizationDisabled = customizationDisabled;
+	}
 }

@@ -9,11 +9,23 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+/**
+ * Per the conditions of the Artistic License,
+ * Hexagon Safety & Infrastructure states that it has
+ * made the following changes to this source file:
+ *
+ *  27 April 2018 - Ability to customize the set of columns displayed
+ *        and their order  
+ */
 package org.displaytag.decorator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.jsp.PageContext;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.displaytag.properties.MediaTypeEnum;
 
 
@@ -35,6 +47,14 @@ public class EscapeXmlColumnDecorator implements DisplaytagColumnDecorator
      */
     public Object decorate(Object columnValue, PageContext pageContext, MediaTypeEnum media)
     {
+    	boolean isCustomLink = columnValue != null && columnValue.toString().indexOf("<a class='custom_grid' href='") != -1;
+    	boolean isCustomProperty = columnValue != null && columnValue.toString().indexOf("<div class='custom_grid'>") != -1;
+    	if (isCustomLink || isCustomProperty) {
+    		if (media.equals(MediaTypeEnum.HTML))
+    			return columnValue;
+    		else
+    			return removeHtmlTags(StringUtils.trimToNull(columnValue.toString()));
+    	}
 
         if (columnValue == null || (!media.equals(MediaTypeEnum.HTML) && !media.equals(MediaTypeEnum.XML)))
         {
@@ -42,6 +62,35 @@ public class EscapeXmlColumnDecorator implements DisplaytagColumnDecorator
         }
 
         return StringEscapeUtils.escapeXml(columnValue.toString());
+    }
+
+    
+    private String removeHtmlTags(String html) {
+    	if (html == null)
+    		return html;
+    	
+		List<String> entry = new ArrayList<>();
+		StringBuilder builder = null;
+		
+		int startPos = -1;
+		for (int i = 0; i < html.length(); i++) {
+			char ch = html.charAt(i);
+
+			if (ch == '>') {
+				startPos = i;
+				builder = new StringBuilder();
+			}
+			else if (ch == '<' && i > 0) {
+				startPos = -1;
+				if (builder.length() > 0) 
+					entry.add(builder.toString());
+			} else if (startPos != -1 && i > startPos) {
+				builder.append(ch);
+			}
+		}
+	
+		return StringUtils.join(entry, ", ");
+    		
     }
 
 }

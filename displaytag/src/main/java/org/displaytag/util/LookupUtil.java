@@ -10,7 +10,7 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 /**
- * Copyright 2014-2017 Intergraph Corporation d/b/a Hexagon Safety & Infrastruture ("Hexagon")
+ * Copyright 2014-2018 Intergraph Corporation d/b/a Hexagon Safety & Infrastruture ("Hexagon")
  * Hexagon is part of Hexagon AB.
  * All rights reserved.
  *
@@ -21,6 +21,9 @@
  * 5 January 2017
  * Fix DISPL-611 - Column text should not be abbreviated in pdf/excel export
  *          when maxLength is set
+ *
+ * 27 April 2018
+ * Add ability to customize set of columns displayed and their order.
  */ 
 package org.displaytag.util;
 
@@ -37,6 +40,7 @@ import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.exception.ObjectLookupException;
+import org.displaytag.tags.DataGridCustomiztionUtil;
 
 
 /**
@@ -192,6 +196,11 @@ public final class LookupUtil
         Validate.notNull(bean, "No bean specified");
         Validate.notNull(name, "No name specified");
 
+        // property of a child collection is in the form of [collectionPropertyInParentClass].propertyNameInChildClass
+        if (name.indexOf("[") != -1 && name.indexOf("].") != -1) {
+    		return DataGridCustomiztionUtil.findLinkedTableFieldValue(bean, name);
+    	}
+
         Object evalBean = bean;
         String evalName = name;
 
@@ -281,6 +290,9 @@ public final class LookupUtil
         }
         else
         {
+        	if (StringUtils.upperCase(evalName).startsWith("CF")) // custom fields
+        		evalBean = DataGridCustomiztionUtil.findCustomFieldValue(evalBean, evalName);
+        	else	
             evalBean = PropertyUtils.getSimpleProperty(evalBean, evalName);
         }
 

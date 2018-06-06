@@ -20,7 +20,10 @@
  *
  *
  *  27 April 2018 - Ability to customize the set of columns displayed
- *        and their order  
+ *        and their order
+ *  
+ *  23 May 2018 - Corrected some failures / errors that could occur with
+ *        table customization  
  */
 
 package org.displaytag.tags;
@@ -55,36 +58,24 @@ import com.google.gson.JsonObject;
 public class DataGridCustomiztionUtil {
 	 private static Log log = LogFactory.getLog(DataGridCustomiztionUtil.class);
 	/**
-	 * custom display tag configuration, populated in the HttpServletRequest as an attribute
+	 * Custom display tag configuration, populated in the HttpServletRequest as an attribute
 	 */
 	public static final String custom_config_attribute_key = "custom_grid_config";
 	public static final String UI_CUSTOMIZATION_MODE_KEY = "show_customization_icon";
+	
+	static Method entityFieldGetterMethod = null;
+	static String entityFieldGetterMethodName = "getDisplayValue";
 	
 	static Method customFieldGetterMethod = null;
 	static String customFieldGetterMethodName = "findCustomFieldValue";
 	
 	static Method linkedTableGetterMethod = null;
 	static String linkedTableGetterMethodName = "findLinkedFieldValue";
-	static String listTableName_attribute_format = "displaytag_listTableName_%s";
-	static String disable_customization_attribute_format = "displaytag_uncustomizable_%s";
 	
 	static Object customGridQueryService;
 
 	public static CustomTableData readCustomizations(PageContext pageContext, TableTag tableTag) {
 		String tableTagId = tableTag.getUid();
-		
-		// for screens with multiple tables, we need to know the db tableName:
-		String listTableKey = String.format(listTableName_attribute_format, tableTagId);
-		String listTable = (String) pageContext.getRequest().getAttribute(listTableKey);
-		if (listTable != null) {
-			tableTag.setListTableName(listTable);
-		}
-		
-		String disableCustomizationKey = String.format(disable_customization_attribute_format, tableTagId);
-		Boolean disableCustomization = (Boolean) pageContext.getRequest().getAttribute(disableCustomizationKey);
-		if (Boolean.TRUE.equals(disableCustomization)) {
-			tableTag.getTableModel().setCustomizationDisabled(true);
-		}
 		
 		customGridQueryService = pageContext.getRequest().getAttribute("customGridQueryService");
 		if (customGridQueryService != null && (customFieldGetterMethod == null || linkedTableGetterMethod == null)) 
@@ -106,6 +97,17 @@ public class DataGridCustomiztionUtil {
 						}
 					}
 				}
+			}
+		}
+		return null;
+	}
+	
+	public static Object getDisplayValue(Object object) {
+		if (entityFieldGetterMethod != null) {
+			try {
+				return entityFieldGetterMethod.invoke(customGridQueryService, object);
+			} catch (Exception e) {
+				log.error(e.getMessage());
 			}
 		}
 		return null;
@@ -146,16 +148,23 @@ public class DataGridCustomiztionUtil {
 	
 	static void findGetterMethods(Class clazz) {
 		for (Method method : clazz.getMethods()) {
-			if (method.getName().equals(customFieldGetterMethodName)) {
+			String methodName = method.getName();
+			
+			if (methodName.equals(customFieldGetterMethodName)) {
 				// check params:
 				Class<?>[]  paramTypes = method.getParameterTypes();
 				if (paramTypes.length == 2 && paramTypes[0].equals(Object.class) && paramTypes[1].equals(String.class))
 					customFieldGetterMethod = method;
-			} else if (method.getName().equals(linkedTableGetterMethodName)) {
+			} else if (methodName.equals(linkedTableGetterMethodName)) {
 				// check params:
 				Class<?>[]  paramTypes = method.getParameterTypes();
 				if (paramTypes.length == 2 && paramTypes[0].equals(Object.class) && paramTypes[1].equals(String.class))
 				linkedTableGetterMethod = method;
+			} else if (methodName.equals(entityFieldGetterMethodName)) {
+				// check params:
+				Class<?>[]  paramTypes = method.getParameterTypes();
+				if (paramTypes.length == 1 && paramTypes[0].equals(Object.class))
+					entityFieldGetterMethod = method;
 			}
 		}
 	}
@@ -203,7 +212,7 @@ public class DataGridCustomiztionUtil {
 		if (customColumnData != null) {
 			return String.format(editCtrl_cust_col,
 								customColumnData.getRecnum(),
-								customColumnData.getTitle(),
+								StringEscapeUtils.escapeXml(customColumnData.getTitle()),
 								customColumnData.getPropertyName(),
 								customColumnData.isHidden(),
 								customColumnData.getSortable(), // original: headerCell.getBeanPropertyName() != null ? headerCell.getSortable() : customColumnData.getSortable(), 
@@ -214,12 +223,12 @@ public class DataGridCustomiztionUtil {
 		} else {
 			return String.format(editCtrl_cust_col,
 					"",
-					headerCell.getTitle(),
+					StringEscapeUtils.escapeXml(headerCell.getTitle()),
 					headerCell.getBeanPropertyName(),
 					"false",
 					headerCell.getSortable(),
 					headerCell.getSortProperty() != null ? headerCell.getSortProperty() : headerCell.getBeanPropertyName(),
-					headerCell.getMaxLength() == 0 ? "" : headerCell.getMaxLength(),
+					headerCell.getMaxLength() == 0 ? "null" : headerCell.getMaxLength(),
 					"false"
 					);
 		}
@@ -234,7 +243,7 @@ public class DataGridCustomiztionUtil {
          for (CustomColumnData columnData : customTableData.getHiddenColumnList()) {
         	String data =  String.format(editCtrl_cust_col,
         					columnData.getRecnum(),
-		 					columnData.getTitle(),
+        					StringEscapeUtils.escapeXml(columnData.getTitle()),
 		 					columnData.getPropertyName(),
 		 					"true", //hidden
 		 					columnData.getSortable(),

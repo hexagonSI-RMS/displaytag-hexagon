@@ -17,6 +17,8 @@
  *  29 July 2014 - extended the security feature to be applicable to
  *        text exports of table contents.
  *
+ *  23 May 2018 - fix an error that would occur when attempting to process
+ *        a value that has already been decorated by another decorator.
  */
  
 package org.displaytag.model;
@@ -30,8 +32,10 @@ import org.apache.commons.lang.UnhandledException;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.displaytag.decorator.DisplaytagColumnDecorator;
+import org.displaytag.decorator.EscapeXmlColumnDecorator;
 import org.displaytag.exception.DecoratorException;
 import org.displaytag.exception.ObjectLookupException;
+import org.displaytag.tags.DataGridCustomiztionUtil;
 import org.displaytag.util.Anchor;
 import org.displaytag.util.Href;
 import org.displaytag.util.HtmlAttributeMap;
@@ -145,6 +149,7 @@ public class Column
             }
         }
 
+        Object originalValue = object;
         DisplaytagColumnDecorator[] decorators = this.header.getColumnDecorators();
         if (decorated)
         {
@@ -156,6 +161,11 @@ public class Column
             }
         }
 
+        // this needs to be done after the decorators, as some decorators look for specific types, 
+        // and DataGridCustomiztionUtil.getDisplayValue() turns the input into a String
+        if (originalValue != null && decorated && onlyBeenXmlEscaped(decorators) && this.header.getCustomColumnData() != null)
+        	object = DataGridCustomiztionUtil.getDisplayValue(originalValue);
+        
         if (object == null || "null".equals(object)) //$NON-NLS-1$
         {
             if (!this.header.getShowNulls())
@@ -167,6 +177,10 @@ public class Column
         return object;
     }
 
+    private boolean onlyBeenXmlEscaped(DisplaytagColumnDecorator[] decorators) {
+    	return decorators != null && decorators.length == 1 && decorators[0] instanceof EscapeXmlColumnDecorator;
+    }
+    
     /**
      * Generates the cell open tag.
      * @return String td open tag

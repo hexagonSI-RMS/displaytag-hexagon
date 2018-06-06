@@ -24,6 +24,9 @@
  *
  * 27 April 2018
  * Add ability to customize set of columns displayed and their order.
+ *
+ * 23 May 2018
+ * Corrected some errors that could occur with table customization.
  */ 
 package org.displaytag.util;
 
@@ -290,7 +293,7 @@ public final class LookupUtil
         }
         else
         {
-        	if (StringUtils.upperCase(evalName).startsWith("CF")) // custom fields
+        	if (StringUtils.upperCase(evalName).startsWith("CF_")) // custom fields
         		evalBean = DataGridCustomiztionUtil.findCustomFieldValue(evalBean, evalName);
         	else	
             evalBean = PropertyUtils.getSimpleProperty(evalBean, evalName);

@@ -36,6 +36,22 @@
       </description>
     </attribute>
     <attribute>
+      <name>listTableName</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <description>
+        Database table name of the list items displayed in the table. 
+      </description>
+    </attribute>
+    <attribute>
+      <name>nonConfigurable</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <description>
+        If nonConfigurable is set to true, the table layout cannot be customized.
+      </description>
+    </attribute>     
+    <attribute>
       <name>name</name>
       <required>false</required>
       <rtexprvalue>true</rtexprvalue>

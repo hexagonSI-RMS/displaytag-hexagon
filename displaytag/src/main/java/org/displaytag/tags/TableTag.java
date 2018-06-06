@@ -27,6 +27,9 @@
  *  13 March 2018 - Added ability to customize order of table columns
  *
  *  27 April 2018 - Further refinement on column customization
+ * 
+ *  23 May 2018 - corrected some issues that could occur with customized
+ *     tables.
  */
  
 package org.displaytag.tags;
@@ -106,6 +109,10 @@ import org.displaytag.util.TagConstants;
 @SuppressWarnings("all")
 public class TableTag extends HtmlTableTag
 {
+	// Hexagon-added property, make the grid non-customizable:
+	private boolean nonConfigurable;
+	// Hexagon-added property, for screens with multiple tables, we need to know the db tableName:
+    private String listTableName;
 
     /**
      * name of the attribute added to page scope when exporting, containing an MediaTypeEnum this can be used in column
@@ -140,7 +147,7 @@ public class TableTag extends HtmlTableTag
      */
     protected Object list;
 
-    private String listTableName;
+
 
     // -- start tag attributes --
 
@@ -824,17 +831,22 @@ public class TableTag extends HtmlTableTag
     }
 
     private void readApplicationCustomizations() {
-        CustomTableData customTableData = DataGridCustomiztionUtil.readCustomizations(this.pageContext, this);
-        this.tableModel.setApplicationCustomTableData(customTableData);
-    	if (customTableData != null && customTableData.getDefaultTableSortProperty() != null) {
-    		// for paginated lists, only need to mark the sorted header as sorted
-    		// for non-paginated lists, the column to sort on is decided in the tableModel->getSortedColumnHeader() method, as that's
-    		// called when sorting happens. We set the header's "alreadySorted" property at tableModel->applyApplicationCustomizations()
-    		this.tableModel.setDefaultTableSortProperty(customTableData.getDefaultTableSortProperty());
+    	if (nonConfigurable) {
+    		getTableModel().setCustomizationDisabled(true);
     	}
-    	
-    	boolean isInUICustomizationMode = Boolean.TRUE.equals(this.pageContext.getRequest().getAttribute(DataGridCustomiztionUtil.UI_CUSTOMIZATION_MODE_KEY));
-    	this.tableModel.setInUICustomizationMode(isInUICustomizationMode);
+    	else {
+	        CustomTableData customTableData = DataGridCustomiztionUtil.readCustomizations(this.pageContext, this);
+	        this.tableModel.setApplicationCustomTableData(customTableData);
+	    	if (customTableData != null && customTableData.getDefaultTableSortProperty() != null) {
+	    		// for paginated lists, only need to mark the sorted header as sorted
+	    		// for non-paginated lists, the column to sort on is decided in the tableModel->getSortedColumnHeader() method, as that's
+	    		// called when sorting happens. We set the header's "alreadySorted" property at tableModel->applyApplicationCustomizations()
+	    		this.tableModel.setDefaultTableSortProperty(customTableData.getDefaultTableSortProperty());
+	    	}
+	    	
+	    	boolean isInUICustomizationMode = Boolean.TRUE.equals(this.pageContext.getRequest().getAttribute(DataGridCustomiztionUtil.UI_CUSTOMIZATION_MODE_KEY));
+	    	this.tableModel.setInUICustomizationMode(isInUICustomizationMode);
+		}
     }
 
     /**
@@ -1789,26 +1801,23 @@ public class TableTag extends HtmlTableTag
             pageContext.setAttribute(this.varTotals, getTotals());
         }
         
-        if (this.tableModel.isInUICustomizationMode()) {
-        	if (!this.tableModel.isCustomizationDisabled()) {
-	        	getTableModel().getApplicationCustomTableData();
-	        	Long id = getSavedCustomizationPK();
-	        	if (listTableName == null)
-	        		listTableName = "";
-	        	if (id == null)
-	        		writer.write(String.format(customizationLink_no_id,
-	        									listTableName,
-							        			((HttpServletRequest)pageContext.getRequest()).getContextPath())
-							        			);
-	        	else
-	        		writer.write(String.format(customizationLink_with_id,
-		        								id,
-		        								listTableName,
-							        			((HttpServletRequest)pageContext.getRequest()).getContextPath())
-						        				);
-	        	
-        	}
-        }
+        if (!nonConfigurable && this.tableModel.isInUICustomizationMode()) {
+        	Long id = getSavedCustomizationPK();
+        	if (listTableName == null)
+        		listTableName = "";
+        	if (id == null)
+        		writer.write(String.format(customizationLink_no_id,
+        									listTableName,
+						        			((HttpServletRequest)pageContext.getRequest()).getContextPath())
+						        			);
+        	else
+        		writer.write(String.format(customizationLink_with_id,
+	        								id,
+	        								listTableName,
+						        			((HttpServletRequest)pageContext.getRequest()).getContextPath())
+					        				);
+        	
+    	}
     }
     
     public Long getSavedCustomizationPK() {
@@ -1924,4 +1933,7 @@ public class TableTag extends HtmlTableTag
 		this.listTableName = listTableName;
 	}
 
+	public void setNonConfigurable(boolean nonConfigurable) {
+		this.nonConfigurable = nonConfigurable;
+	}
 }

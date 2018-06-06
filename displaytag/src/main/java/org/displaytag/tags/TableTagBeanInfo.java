@@ -9,6 +9,14 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+/**
+ * Per the conditions of the Artistic License,
+ * Hexagon Safety & Infrastructure states that it has
+ * made the following changes to this source file:
+ *
+ *  23 May 2018 - corrected some issues that could occur with customized
+ *     tables.
+ */
 package org.displaytag.tags;
 
 import java.beans.IntrospectionException;
@@ -95,6 +103,15 @@ public class TableTagBeanInfo extends SimpleBeanInfo
             proplist.add(new PropertyDescriptor("list", //$NON-NLS-1$
                 TableTag.class, null, "setList")); //$NON-NLS-1$
 
+            // 
+            
+        	// Hexagon-added property, make the table non-customizable:
+            proplist.add(new PropertyDescriptor("listTableName",
+                    TableTag.class, null, "setListTableName")); 
+            // Hexagon-added property, for screens with multiple tables, we need to know the db tableName:
+            proplist.add(new PropertyDescriptor("nonConfigurable",
+                    TableTag.class, null, "setNonConfigurable"));
+            
             // make ATG Dynamo happy:
             proplist.add(new PropertyDescriptor("className", //$NON-NLS-1$
                 TableTag.class, null, "setClass")); //$NON-NLS-1$

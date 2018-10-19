@@ -192,7 +192,7 @@ public class DataGridCustomiztionUtil {
     public static String getDisplayOrder(HeaderCell headerCell) {
     	if (isSelectBox(headerCell.getTitle()))
     		return "";
-    	return String.format(column_display_order, headerCell.getTitle());
+    	return String.format(column_display_order, StringEscapeUtils.escapeXml(headerCell.getTitle()));
     }
     
     static String editCtrl_cust_col = "<div class='coldata' "

@@ -30,7 +30,9 @@
  *  13 March 2018 - Added ability to customize the order of table columns
  *
  *  27 April 2018 - Additional changes for column order customization and
- *        customizing set of columns displayed.  
+ *        customizing set of columns displayed. 
+ * 
+ *  19 March 2019 - Additional changes to support operation in multi-lingual environments
  */
 package org.displaytag.tags;
 
@@ -64,6 +66,7 @@ import org.displaytag.properties.SortOrderEnum;
 import org.displaytag.util.DefaultHref;
 import org.displaytag.util.Href;
 import org.displaytag.util.HtmlAttributeMap;
+import org.displaytag.util.HxgnDisplayUtil;
 import org.displaytag.util.MediaUtil;
 import org.displaytag.util.MultipleHtmlAttribute;
 import org.displaytag.util.TagConstants;
@@ -468,7 +471,7 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
     {
         HttpServletRequest req = (HttpServletRequest) pageContext.getRequest();
         if (Boolean.TRUE.equals(req.getAttribute("inCustomizationMode")))
-            return;
+    		return;
         // call encodeURL to preserve session id when cookies are disabled
         String encodedHref = ((HttpServletResponse) this.pageContext.getResponse()).encodeURL(StringUtils
             .defaultString(req.getContextPath() + value));
@@ -679,7 +682,7 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
         {
             addHeaderToTable(tableTag);
         }
-
+        
         customColumnData = DataGridCustomiztionUtil.getCustomColumnDataByCotsTitle(tableTag.getTableModel().getWebrmsCustomTableData(), getEvalTitle(tableTag));
         
         /** no need to process this column if it's hidden through UI customization */
@@ -687,7 +690,7 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
         {
             return super.doEndTag();
         }
-
+        
         if (customColumnData != null) {
         	// these are for displays:
         	if (customColumnData.getSortOnProperty() == null) 
@@ -733,22 +736,22 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
 
         return super.doEndTag();
     }
-
+    
     // this is the same snippet from addHeaderToTable, copied with no modifications
     private String getEvalTitle(TableTag tableTag) {
-        // don't modify "title" directly
-        String evalTitle = this.title;
-
-        // title has precedence over titleKey
-        if (evalTitle == null && (this.titleKey != null || this.property != null))
-        {
-            // handle title i18n
-            evalTitle = tableTag.getProperties().geResourceProvider().getResource(
-                this.titleKey,
-                this.property,
-                tableTag,
-                this.pageContext);
-        }
+    	// don't modify "title" directly
+    	String evalTitle = this.title;
+	
+	    // title has precedence over titleKey
+	    if (evalTitle == null && (this.titleKey != null || this.property != null))
+	    {
+	        // handle title i18n
+	        evalTitle = tableTag.getProperties().geResourceProvider().getResource(
+	            this.titleKey,
+	            this.property,
+	            tableTag,
+	            this.pageContext);
+	    }
 	    return evalTitle;
     }
     
@@ -770,7 +773,7 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
         	if (customColumnData.isHidden())
         		return;
         }
-
+        
         HeaderCell headerCell = new HeaderCell();
         headerCell.setHeaderAttributes((HtmlAttributeMap) this.headerAttributeMap.clone());
         headerCell.setHtmlAttributes((HtmlAttributeMap) this.attributeMap.clone());
@@ -813,7 +816,10 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
         headerCell.setMaxLength(this.maxLength);
         headerCell.setMaxWords(this.maxWords);
         headerCell.setGroup(this.group);
-        headerCell.setSortProperty(this.sortProperty);
+
+        String newSortProperty = HxgnDisplayUtil.translateSortingPropertyIfNecessary(tableTag, this.property, this.sortProperty);
+    	headerCell.setSortProperty(newSortProperty);
+
         headerCell.setTotaled(this.totaled);
 
         // DISPL-242: handle grouped title if necessary.

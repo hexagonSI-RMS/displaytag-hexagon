@@ -27,6 +27,9 @@
  *
  * 23 May 2018
  * Corrected some errors that could occur with table customization.
+ *
+ * 19 March 2019
+ * Add ability to operate in multi-lingual environments.
  */ 
 package org.displaytag.util;
 
@@ -296,7 +299,7 @@ public final class LookupUtil
         	if (StringUtils.upperCase(evalName).startsWith("CF_")) // custom fields
         		evalBean = DataGridCustomiztionUtil.findCustomFieldValue(evalBean, evalName);
         	else	
-            evalBean = PropertyUtils.getSimpleProperty(evalBean, evalName);
+        		evalBean = HxgnDisplayUtil.findFieldValue(evalBean, evalName);
         }
 
         return evalBean;

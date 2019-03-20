@@ -30,6 +30,8 @@
  * 
  *  23 May 2018 - corrected some issues that could occur with customized
  *     tables.
+ *
+ *  19 March 2019 - Support for operation in multi-lingual environments
  */
  
 package org.displaytag.tags;
@@ -91,6 +93,7 @@ import org.displaytag.render.SecurityService;
 import org.displaytag.util.CollectionUtil;
 import org.displaytag.util.DependencyChecker;
 import org.displaytag.util.Href;
+import org.displaytag.util.HxgnDisplayUtil;
 import org.displaytag.util.ParamEncoder;
 import org.displaytag.util.RequestHelper;
 import org.displaytag.util.RequestHelperFactory;
@@ -785,7 +788,7 @@ public class TableTag extends HtmlTableTag
     {
         // DISPL-409: Wrong sorting column in export
     	  // addedd by g.agnelli on 18-oct-2006#START
-    	  this.getAttributeMap().remove("currentColumn");
+    	this.getAttributeMap().remove("currentColumn");
         this.getAttributeMap().remove("numHideColumn");
         // addedd by g.agnelli on 18-oct-2006#END
     	
@@ -807,7 +810,9 @@ public class TableTag extends HtmlTableTag
         this.tableModel.setForm(this.form);
 
         readApplicationCustomizations();
-        
+
+        HxgnDisplayUtil.initialize(this.pageContext);
+
         initParameters();
 
         this.tableModel.setMedia(this.currentMediaType);
@@ -1856,6 +1861,11 @@ public class TableTag extends HtmlTableTag
     public TableModel getTableModel()
     {
         return this.tableModel;
+    }
+
+    public Row getCurrentRow()
+    {
+    	return this.currentRow;
     }
 
     /**

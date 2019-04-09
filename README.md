@@ -28,7 +28,7 @@ File | Changes
 /displaytag/src/main/java/org/displaytag/tags/ColumnTagBeanInfo.java | DISPL-242: Add support for "grouped" table headers
 /displaytag/src/main/java/org/displaytag/tags/DataGridCustomizationUtil.java | Add ability to customize set of columns and their order
 /displaytag/src/main/java/org/displaytag/tags/TableTag.java | DISPL-409: wrong sorting column in export; DISPL-439: Additional wildcard featrures; Change to support "securing" rows of data so unauthorized users cannot see/export them; Ability to change column order of table; Support use in multi-lingual environments.
-/displaytag/src/main/java/org/displaytag/util/HxgnDisplayUtil.java | Support use in multi-lingual environments.
+/displaytag/src/main/java/org/displaytag/util/HxgnDisplayUtil.java | New file; Support use in multi-lingual environments.
 /displaytag/src/main/java/org/displaytag/util/LookupUtil.java | DISPL-611: Column text should not be abbreviated in PDF/Excel export when maxLength is set; Add ability to customize set of columns and their order; Support use in multi-lingual environments
 /displaytag/src/main/java/org/displaytag/util/TagConstants.java | DISPL-242: Add support for "grouped" table headers
 /displaytag-export-poi/src/main/java/org/displaytag/decorator/xssf/DecoratesXssf.java | New file; Modified Excel export to support Excel 2007+ format

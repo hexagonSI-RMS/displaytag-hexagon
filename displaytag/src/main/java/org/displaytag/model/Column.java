@@ -27,6 +27,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.UnhandledException;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -35,6 +36,7 @@ import org.displaytag.decorator.DisplaytagColumnDecorator;
 import org.displaytag.decorator.EscapeXmlColumnDecorator;
 import org.displaytag.exception.DecoratorException;
 import org.displaytag.exception.ObjectLookupException;
+import org.displaytag.properties.MediaTypeEnum;
 import org.displaytag.tags.DataGridCustomiztionUtil;
 import org.displaytag.util.Anchor;
 import org.displaytag.util.Href;
@@ -161,10 +163,25 @@ public class Column
             }
         }
 
-        // this needs to be done after the decorators, as some decorators look for specific types, 
-        // and DataGridCustomiztionUtil.getDisplayValue() turns the input into a String
-        if (originalValue != null && decorated && onlyBeenXmlEscaped(decorators) && this.header.getCustomColumnData() != null)
+		/**
+		 * This needs to be done after the decorators, as some decorators look for
+		 * specific types, and DataGridCustomiztionUtil.getDisplayValue() turns the
+		 * input into a String.
+		 * 
+		 * Modified the below logic, calling decorators again for all custom grid
+		 * columns to avoid printing HTML data in all supported medias except HTML
+		 * media.
+		 */
+		if (originalValue != null && decorated && onlyBeenXmlEscaped(decorators)
+				&& this.header.getCustomColumnData() != null) {
         	object = DataGridCustomiztionUtil.getDisplayValue(originalValue);
+			boolean isCustomLink = object != null && object.toString().indexOf("<a class='custom_grid' href='") != -1;
+			boolean isCustomProperty = object != null && object.toString().indexOf("<div class='custom_grid'>") != -1;
+			if (!row.getParentTable().getMedia().equals(MediaTypeEnum.HTML) && (isCustomLink || isCustomProperty)) {
+				object = decorators[0].decorate(object, row.getParentTable().getPageContext(),
+						row.getParentTable().getMedia());
+			}
+		}
         
         if (object == null || "null".equals(object)) //$NON-NLS-1$
         {

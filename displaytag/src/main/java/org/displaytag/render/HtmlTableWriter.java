@@ -507,7 +507,7 @@ public class HtmlTableWriter extends TableWriterAdapter
         if (this.tableModel.isInUICustomizationMode()) {
         	// this saves a db query to render the hidden columns:
         	write("<th style='display: none;'>");
-        	write(DataGridCustomiztionUtil.getEditControlsForHiddenColumns(tableModel.getWebrmsCustomTableData()));
+        	write(DataGridCustomiztionUtil.getEditControlsForHiddenColumns(tableModel.getApplicationCustomTableData()));
         	write("</th>");
         }
         

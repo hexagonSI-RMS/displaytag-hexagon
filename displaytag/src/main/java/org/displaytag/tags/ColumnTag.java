@@ -683,7 +683,7 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
             addHeaderToTable(tableTag);
         }
         
-        customColumnData = DataGridCustomiztionUtil.getCustomColumnDataByCotsTitle(tableTag.getTableModel().getWebrmsCustomTableData(), getEvalTitle(tableTag));
+        customColumnData = DataGridCustomiztionUtil.getCustomColumnDataByCotsTitle(tableTag.getTableModel().getApplicationCustomTableData(), getEvalTitle(tableTag));
         
         /** no need to process this column if it's hidden through UI customization */
         if (!tableTag.isIncludedRow() || (customColumnData != null && customColumnData.isHidden()))
@@ -766,7 +766,7 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
     public void addHeaderToTable(TableTag tableTag) throws DecoratorInstantiationException, ObjectLookupException
     {
     	String evalTitle = getEvalTitle(tableTag);
-        customColumnData = DataGridCustomiztionUtil.getCustomColumnDataByCotsTitle(tableTag.getTableModel().getWebrmsCustomTableData(), evalTitle);
+        customColumnData = DataGridCustomiztionUtil.getCustomColumnDataByCotsTitle(tableTag.getTableModel().getApplicationCustomTableData(), evalTitle);
         
         /** no need to process this column if it's hidden through UI customization */
         if (customColumnData != null) {

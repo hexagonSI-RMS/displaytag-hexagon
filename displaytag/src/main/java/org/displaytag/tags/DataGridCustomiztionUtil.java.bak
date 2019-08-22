@@ -28,7 +28,6 @@
 
 package org.displaytag.tags;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -285,35 +284,5 @@ public class DataGridCustomiztionUtil {
     
     private static boolean isSelectBox(String title) {
     	return StringUtils.indexOf(title, "<div>Select</div>") != -1;
-    }
-    
-    static Method titleResolveMethod = null;
-    
-    public static boolean isTitleValueInAnyOfTheLocales(PageContext pageContext, String titleKey, String titleValue) {
-    	Object customGridQueryService = pageContext.getRequest().getAttribute("customGridQueryService");
-
-    	if (titleResolveMethod == null) {
-	    	for (Method method : customGridQueryService.getClass().getMethods()) {
-				String methodName = method.getName();
-				
-				if (methodName.equals("isTitleValueInAnyOfTheLocales")) {
-					// check params:
-					Class<?>[]  paramTypes = method.getParameterTypes();
-					if (paramTypes.length == 2 && paramTypes[0].equals(String.class) && paramTypes[1].equals(String.class)) {
-						titleResolveMethod = method;
-						break;
-					}
-				}
-			}
-    	}
-		if (titleResolveMethod != null) {
-			try {
-				return Boolean.TRUE.equals(titleResolveMethod.invoke(customGridQueryService, titleKey, titleValue));
-			} catch (Exception e) {
-				e.printStackTrace();
-				log.error("error calling isTitleValueInAnyOfTheLocales on customGridQueryService with titileKey " + titleKey +" tiltleValue " + titleValue);
-			}
-		}
-		return false;
     }
 }

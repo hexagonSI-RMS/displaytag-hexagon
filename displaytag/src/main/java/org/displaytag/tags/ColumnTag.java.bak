@@ -778,7 +778,6 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
         headerCell.setHeaderAttributes((HtmlAttributeMap) this.headerAttributeMap.clone());
         headerCell.setHtmlAttributes((HtmlAttributeMap) this.attributeMap.clone());
         headerCell.setTitle(evalTitle);
-        headerCell.setTitleKey(this.titleKey);
         headerCell.setSortable(this.sortable);
 
         List decorators = new ArrayList();

@@ -10,7 +10,7 @@
   <groupId>com.intergraph</groupId>
   <artifactId>displaytag</artifactId>
   <name>Display tag library</name>
-  <version>1.2.17</version>
+  <version>1.2.15</version>
   <dependencies>
     <dependency>
       <groupId>tomcat</groupId>

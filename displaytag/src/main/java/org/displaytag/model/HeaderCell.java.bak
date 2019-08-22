@@ -92,8 +92,6 @@ public class HeaderCell
      */
     private String title;
 
-    private String titleKey;
-
     /**
      * is the column sortable?
      */
@@ -736,13 +734,5 @@ public class HeaderCell
 
 	public void setCustomColumnData(CustomColumnData customColumnData) {
 		this.customColumnData = customColumnData;
-	}
-
-	public String getTitleKey() {
-		return titleKey;
-	}
-
-	public void setTitleKey(String titleKey) {
-		this.titleKey = titleKey;
 	}
 }

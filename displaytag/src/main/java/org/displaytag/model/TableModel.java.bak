@@ -289,22 +289,14 @@ public class TableModel
         return headerCell;
     }
     
-	private HeaderCell findMatchingHeaderCell(CustomColumnData colConfig) {
-		for (Object header : headerCellList) {
+	private Map<String, HeaderCell> sortHeaderCellsByTitle() {
+		Map<String, HeaderCell> headerCellsByTitle = new HashMap<>();
+    	for (Object header : headerCellList) {
     		HeaderCell headerCell = (HeaderCell) header;
-    		String titleKey = headerCell.getTitleKey();
-    		
-    		if (titleKey == null || colConfig.getIsAdded() || colConfig.getCotsTitle() == null)
-    			return null;
-    			 
-    		// if colConfig is for a COTS column, the title must be titleKey resolved to one of the configured locales
-    		// so we resolve the titleKey to each of the locales and see if it matches the colConfig.cotsTitle
-    		// this is to work around the fact CustomColumnData doesn't store the titleKey
-    		if (DataGridCustomiztionUtil.isTitleValueInAnyOfTheLocales(pageContext, titleKey, colConfig.getCotsTitle()))
-    			return headerCell;
+    		headerCellsByTitle.put(headerCell.getTitle(), headerCell);
     	}
-		return null;
-	}
+    	return headerCellsByTitle;
+    }
 	
 //    private boolean isSelectBox(String title) {
 //    	return StringUtils.indexOf(title, "<div>Select</div>") != -1;

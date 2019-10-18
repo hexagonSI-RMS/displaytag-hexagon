@@ -32,6 +32,8 @@
  *     tables.
  *
  *  19 March 2019 - Support for operation in multi-lingual environments
+ * 
+ *  18 October 2019 - Support for different data encodings
  */
  
 package org.displaytag.tags;
@@ -1610,6 +1612,7 @@ public class TableTag extends HtmlTableTag
     protected void writeExport(ExportView exportView) throws IOException, JspException
     {
         String filename = properties.getExportFileName(this.currentMediaType);
+        String fileEncoding = properties.getExportFileEncoding(this.currentMediaType);
 
         HttpServletResponse response = (HttpServletResponse) this.pageContext.getResponse();
         HttpServletRequest request = (HttpServletRequest) this.pageContext.getRequest();
@@ -1634,6 +1637,7 @@ public class TableTag extends HtmlTableTag
                 // We are running under the export filter in buffered mode
                 bean.put(TableTagParameters.BEAN_CONTENTTYPE, mimeType);
                 bean.put(TableTagParameters.BEAN_FILENAME, filename);
+                bean.put(TableTagParameters.BEAN_FILE_ENCODING, fileEncoding);
 
                 if (exportView instanceof TextExportView)
                 {

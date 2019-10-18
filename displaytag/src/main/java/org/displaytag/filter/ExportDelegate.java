@@ -16,6 +16,7 @@
  *
  *  5 January 2016 - Include "no-cache, no-store, must-revalidate"
  *      cache control directive on exports.
+ *  18 October 2019 - Added support for different character encodings
  */ 
 package org.displaytag.filter;
 
@@ -117,13 +118,21 @@ public final class ExportDelegate
             response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         }
 
-        String characterEncoding = wrapper.getCharacterEncoding();
+        // Use particular encoding if specified in properties.
+        String characterEncoding = (String) bean.get(TableTagParameters.BEAN_FILE_ENCODING);
+        if (characterEncoding == null) {
+            characterEncoding = wrapper.getCharacterEncoding();
         String wrappedContentType = wrapper.getContentType();
 
         if (wrappedContentType != null && wrappedContentType.indexOf("charset") > -1)
         {
             // charset is already specified (see #921811)
             characterEncoding = StringUtils.substringAfter(wrappedContentType, "charset=");
+            }
+        }
+        else
+        {
+            characterEncoding.toUpperCase();
         }
 
         if (characterEncoding != null && contentType.indexOf("charset") == -1) //$NON-NLS-1$

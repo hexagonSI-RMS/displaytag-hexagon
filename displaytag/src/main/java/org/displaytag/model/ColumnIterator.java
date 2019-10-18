@@ -9,11 +9,21 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+/**
+ * Per the conditions of the Artistic License,
+ * Hexagon Safety & Infrastructure states that it has
+ * made the following changes to this source file:
+ *
+ *  18 October 2019 - Added support for Right-to-Left languages
+ *  
+ */
 package org.displaytag.model;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.displaytag.properties.MediaTypeEnum;
 
 /**
  * Iterator on columns.
@@ -46,7 +56,15 @@ public class ColumnIterator
     public ColumnIterator(List columns, Row row)
     {
         this.headerIterator = columns.iterator();
+
+        // Reverse column order during export if direction is rtl.
+        // Note at this point, the table has been rendered completely, so it should be safe to re-arrange the order of cell list.
+        if (!row.getParentTable().getMedia().equals(MediaTypeEnum.HTML) &&
+        	row.getParentTable().getProperties().getExportDirectionRtl()) {
+        	Collections.reverse(row.getCellList());
+        }
         this.cellIterator = row.getCellList().iterator();
+
         this.parentRow = row;
     }
 

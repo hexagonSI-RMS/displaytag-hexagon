@@ -15,6 +15,7 @@
  * made the following changes to this source file:
  *
  *  25 July 2014 - Added a property for secured row label
+ *  18 October 2019 - Added support for alternate data encodings
  *  
  */
  
@@ -286,6 +287,12 @@ public final class TableProperties implements Cloneable
     public static final String PROPERTY_EXPORTTYPES = "export.types"; //$NON-NLS-1$
 
     /**
+     * property <code>export.direction.rtl</code>: If this property is true, it means the exported table is rendered
+     * in right-to-left direction.
+     */
+    public static final String PROPERTY_EXPORT_DIRECTION_RTL = "export.direction.rtl"; //$NON-NLS-1$
+
+    /**
      * export property <code>label</code>.
      */
     public static final String EXPORTPROPERTY_STRING_LABEL = "label"; //$NON-NLS-1$
@@ -304,6 +311,16 @@ public final class TableProperties implements Cloneable
      * export property <code>filename</code>.
      */
     public static final String EXPORTPROPERTY_STRING_FILENAME = "filename"; //$NON-NLS-1$
+
+    /**
+     * export property <code>file.encoding</code>.
+     */
+    public static final String EXPORTPROPERTY_STRING_FILE_ENCODING = "file.encoding"; //$NON-NLS-1$
+
+    /**
+     * export property <code>font.path</code>.
+     */
+    public static final String EXPORTPROPERTY_STRING_FONT_PATH = "font.path"; //$NON-NLS-1$
 
     /**
      * Property <code>pagination.sort.param</code>. If external pagination and sorting is used, it holds the name of
@@ -572,7 +589,7 @@ public final class TableProperties implements Cloneable
      * @param myLocale the locale we are in
      * @throws TablePropertiesLoadException for errors during loading of properties files
      */
-    private TableProperties(Locale myLocale) throws TablePropertiesLoadException
+    private TableProperties(Locale myLocale)
     {
         this.locale = myLocale;
         // default properties will not change unless this class is reloaded
@@ -583,7 +600,7 @@ public final class TableProperties implements Cloneable
 
         // Now copy in the user properties (properties file set by calling setUserProperties()).
         // note setUserProperties() MUST BE CALLED before the first TableProperties instantation
-        Enumeration keys = userProperties.keys();
+        Enumeration<Object> keys = userProperties.keys();
         while (keys.hasMoreElements())
         {
             String key = (String) keys.nextElement();
@@ -605,7 +622,7 @@ public final class TableProperties implements Cloneable
 
         if (bundle != null)
         {
-            Enumeration keys = bundle.getKeys();
+            Enumeration<String> keys = bundle.getKeys();
             while (keys.hasMoreElements())
             {
                 String key = (String) keys.nextElement();
@@ -682,7 +699,7 @@ public final class TableProperties implements Cloneable
     {
         // copy keys here, so that this can be invoked more than once from different sources.
         // if default properties are not yet loaded they will be copied in constructor
-        Enumeration keys = overrideProperties.keys();
+        Enumeration<Object> keys = overrideProperties.keys();
         while (keys.hasMoreElements())
         {
             String key = (String) keys.nextElement();
@@ -883,6 +900,26 @@ public final class TableProperties implements Cloneable
     }
 
     /**
+     * Returns the file encoding type for the given media. Can be null
+     * @param exportType instance of MediaTypeEnum
+     * @return String file encoding type
+     */
+    public String getExportFileEncoding(MediaTypeEnum exportType)
+    {
+        return getProperty(PROPERTY_EXPORT_PREFIX + SEP + exportType.getName() + SEP + EXPORTPROPERTY_STRING_FILE_ENCODING);
+    }
+
+    /**
+     * Returns the font file path for the given media. Can be null
+     * @param exportType instance of MediaTypeEnum
+     * @return String font file path
+     */
+    public String getExportFontPath(MediaTypeEnum exportType)
+    {
+        return getProperty(PROPERTY_EXPORT_PREFIX + SEP + exportType.getName() + SEP + EXPORTPROPERTY_STRING_FONT_PATH);
+    }
+
+    /**
      * Getter for the <code>PROPERTY_BOOLEAN_EXPORTDECORATED</code> property.
      * @return boolean <code>true</code> if decorators should be used in exporting
      */
@@ -1045,6 +1082,15 @@ public final class TableProperties implements Cloneable
         }
 
         return StringUtils.split(list);
+    }
+
+    /**
+     * Getter for the <code>PROPERTY_EXPORT_DIRECTION_RTL</code> property.
+     * @return boolean
+     */
+    public boolean getExportDirectionRtl()
+    {
+        return getBooleanProperty(PROPERTY_EXPORT_DIRECTION_RTL);
     }
 
     /**

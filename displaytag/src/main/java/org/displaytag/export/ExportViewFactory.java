@@ -9,8 +9,17 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+/**
+ * Per the conditions of the Artistic License,
+ * Hexagon Safety & Infrastructure states that it has
+ * made the following changes to this source file:
+ *
+ *  18 October 2019 - Added support for Right-to-Left languages
+ *  
+ */
 package org.displaytag.export;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -171,6 +180,12 @@ public final class ExportViewFactory
             throw new WrappedRuntimeException(getClass(), e);
         }
 
+        // Reverse header column order during export if direction is rtl.
+        // Note at this point, the table has been rendered completely, so it should be safe to re-arrange the order of cell list.
+        // TODO: Consider moving this logic to each ExportView?
+        if (tableModel.getProperties().getExportDirectionRtl()) {
+        	Collections.reverse(tableModel.getHeaderCellList());
+        }
         view.setParameters(tableModel, exportFullList, includeHeader, decorateValues);
         return view;
     }

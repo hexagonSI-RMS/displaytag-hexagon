@@ -9,6 +9,14 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+/**
+ * Per the conditions of the Artistic License,
+ * Hexagon Safety & Infrastructure states that it has
+ * made the following changes to this source file:
+ *
+ *  18 October 2019 - Added support for file data encoding
+ *  
+ */
 package org.displaytag.tags;
 
 /**
@@ -71,22 +79,27 @@ public final class TableTagParameters
     public static final String CSS_EMPTYLIST = "empty";
 
     /**
-     * Key on the map passed to the filter containg the "buffer" flag.
+     * Key on the map passed to the filter containing the "buffer" flag.
      */
     public static final String BEAN_BUFFER = "buffer";
 
     /**
-     * Key on the map passed to the filter containg the content type.
+     * Key on the map passed to the filter containing the content type.
      */
     public static final String BEAN_CONTENTTYPE = "contenttype";
 
     /**
-     * Key on the map passed to the filter containg the file name.
+     * Key on the map passed to the filter containing the file name.
      */
     public static final String BEAN_FILENAME = "filename";
 
     /**
-     * Key on the map passed to the filter containg the exported data.
+     * Key on the map passed to the filter containing the file encoding type.
+     */
+    public static final String BEAN_FILE_ENCODING = "fileEncoding";
+
+    /**
+     * Key on the map passed to the filter containing the exported data.
      */
     public static final String BEAN_BODY = "body";
 

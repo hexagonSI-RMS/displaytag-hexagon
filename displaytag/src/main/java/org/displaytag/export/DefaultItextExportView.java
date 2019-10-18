@@ -9,6 +9,14 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+/**
+ * Per the conditions of the Artistic License,
+ * Hexagon Safety & Infrastructure states that it has
+ * made the following changes to this source file:
+ *
+ *  18 October 2019 - Added support for Right-to-Left languages
+ *  
+ */
 package org.displaytag.export;
 
 import java.io.OutputStream;
@@ -70,6 +78,11 @@ public abstract class DefaultItextExportView implements BinaryExportView
             document.open();
             Table table = new Table(this.model.getNumberOfColumns());
             ItextTableWriter writer = new ItextTableWriter(table, document);
+
+            // Set custom font and direction, if any.
+            writer.setFontFile(model.getProperties().getExportFontPath(model.getMedia()));
+            writer.setDirectionRightToLeft(model.getProperties().getExportDirectionRtl());
+
             writer.writeTable(this.model, "-1");
             document.add(table);
             document.close();

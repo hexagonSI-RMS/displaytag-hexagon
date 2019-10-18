@@ -9,6 +9,14 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
+ /**
+ * Per the conditions of the Artistic License,
+ * Hexagon Safety & Infrastructure states that it has
+ * made the following changes to this source file:
+ *
+ *  18 October 2019 - Added support for locales that need different typeface
+ *  
+ */
 package org.displaytag.render;
 
 import java.awt.Color;
@@ -16,6 +24,8 @@ import java.util.Iterator;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 import org.displaytag.exception.DecoratorException;
 import org.displaytag.exception.ObjectLookupException;
@@ -34,6 +44,7 @@ import com.lowagie.text.FontFactory;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.Table;
+import com.lowagie.text.pdf.BaseFont;
 
 
 /**
@@ -44,6 +55,10 @@ import com.lowagie.text.Table;
  */
 public class ItextTableWriter extends TableWriterAdapter
 {
+    /**
+     * logger.
+     */
+	private static Log log = LogFactory.getLog(ItextTableWriter.class);
 
     /**
      * iText representation of the table.
@@ -61,6 +76,22 @@ public class ItextTableWriter extends TableWriterAdapter
     private Font defaultFont;
 
     /**
+     * The default font size used in the document.
+     */
+    private int defaultFontSize = 10;
+
+    /**
+     * The file path for the custom font used in the document.
+     */
+    private String fontFile;
+    private BaseFont customBaseFont;
+
+    /**
+     * Is the document direction from right to left.
+     */
+    private boolean isDirectionRightToLeft = false;
+
+    /**
      * This table writer uses an iText table and document to do its work.
      * @param table iText representation of the table.
      * @param document iText document to which the table is written.
@@ -69,6 +100,38 @@ public class ItextTableWriter extends TableWriterAdapter
     {
         this.table = table;
         this.document = document;
+    }
+
+    public void setDirectionRightToLeft(boolean isDirectionRightToLeft) {
+    	this.isDirectionRightToLeft = isDirectionRightToLeft;
+    }
+
+    public void setFontFile(String fontFile)
+    {
+        this.fontFile = fontFile;
+        try {
+        	if (fontFile != null) {
+    	        this.customBaseFont = BaseFont.createFont(this.fontFile, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        	}
+        } catch (Exception e) {
+            log.warn("Custom font cannot be created from file:, " + fontFile + ", use default font instead.", e);
+            this.customBaseFont = null;
+        }
+    }
+
+    private Font getFont(int size, Integer style) {
+    	Font font;
+    	if (customBaseFont != null) {
+    		font = new Font(customBaseFont, size);
+    	} else {
+    		font = FontFactory.getFont(FontFactory.HELVETICA, size);
+    	}
+
+    	if (style != null)
+    		font.setStyle(style);
+
+    	font.setColor(new Color(0x00, 0x00, 0x00));
+    	return font;
     }
 
     /**
@@ -93,7 +156,7 @@ public class ItextTableWriter extends TableWriterAdapter
      */
     protected Font getTableFont()
     {
-        return FontFactory.getFont(FontFactory.HELVETICA, 10, Font.NORMAL, new Color(0x00, 0x00, 0x00));
+        return getFont(defaultFontSize, Font.NORMAL);
     }
 
     /**
@@ -123,7 +186,8 @@ public class ItextTableWriter extends TableWriterAdapter
      */
     protected Font getCaptionFont()
     {
-        return FontFactory.getFont(FontFactory.HELVETICA, 17, Font.BOLD, new Color(0x00, 0x00, 0x00));
+        return getFont(17, Font.BOLD);
+
     }
 
     /**
@@ -233,7 +297,7 @@ public class ItextTableWriter extends TableWriterAdapter
      */
     protected Font getFooterFont()
     {
-        return FontFactory.getFont(FontFactory.HELVETICA, 10);
+        return getFont(defaultFontSize, null);
     }
 
     /**
@@ -297,6 +361,11 @@ public class ItextTableWriter extends TableWriterAdapter
         Cell cell = new Cell(new Chunk(StringUtils.trimToEmpty(ObjectUtils.toString(value)), this.defaultFont));
         cell.setVerticalAlignment(Element.ALIGN_TOP);
         cell.setLeading(8);
+
+        if (isDirectionRightToLeft) {
+            cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        }
+
         return cell;
     }
 
@@ -372,8 +441,9 @@ public class ItextTableWriter extends TableWriterAdapter
      */
     private void setBoldStyle(Chunk chunk, Color color)
     {
-        Font font = chunk.font();
-        chunk.setFont(FontFactory.getFont(font.getFamilyname(), font.size(), Font.BOLD, color));
+    	Font newFont = new Font(chunk.font());
+    	newFont.setStyle(Font.BOLD);
+    	chunk.setFont(newFont);
     }
 
     /**

@@ -193,8 +193,6 @@ public class TableModel
     	if (this.applicationCustomTableData == null) return;
     	
     	// reorder headers:
-    	
-    	Map<String, HeaderCell> headerCellByCotsTitle = sortHeaderCellsByTitle();
 		List<HeaderCell> newHeaderCellList = new ArrayList<>();
 		
 		for (CustomColumnData colConfig : applicationCustomTableData.getVisibleColumnList()) {
@@ -290,18 +288,24 @@ public class TableModel
     }
     
 	private HeaderCell findMatchingHeaderCell(CustomColumnData colConfig) {
+		if (colConfig.getCotsTitle() == null)
+			return null;
+
 		for (Object header : headerCellList) {
     		HeaderCell headerCell = (HeaderCell) header;
     		String titleKey = headerCell.getTitleKey();
     		
-    		if (titleKey == null || colConfig.getIsAdded() || colConfig.getCotsTitle() == null)
-    			return null;
-    			 
-    		// if colConfig is for a COTS column, the title must be titleKey resolved to one of the configured locales
-    		// so we resolve the titleKey to each of the locales and see if it matches the colConfig.cotsTitle
+			if (titleKey != null) {
+				// if colConfig is for a COTS column with titleKey, the title must be titleKey resolved to one of the configured
+				// locales so we resolve the titleKey to each of the locales and see if it matches the colConfig.cotsTitle
     		// this is to work around the fact CustomColumnData doesn't store the titleKey
     		if (DataGridCustomiztionUtil.isTitleValueInAnyOfTheLocales(pageContext, titleKey, colConfig.getCotsTitle()))
     			return headerCell;
+			} else {
+				// if the titleKey is not available, just compare title values
+				if (colConfig.getCotsTitle().equals(headerCell.getTitle()))
+					return headerCell;
+			}
     	}
 		return null;
 	}

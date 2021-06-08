@@ -171,6 +171,8 @@ public class HeaderCell
     private boolean isGroupedHeader = false;
     private int colspanSize;
 
+    private boolean nonConfigurable = false;
+
     public String getGroupHeader() {
 		return groupHeader;
 	}
@@ -744,5 +746,13 @@ public class HeaderCell
 
 	public void setTitleKey(String titleKey) {
 		this.titleKey = titleKey;
+	}
+	
+	public boolean isNonConfigurable() {
+		return nonConfigurable;
+	}
+	
+	public void setNonConfigurable(boolean nonConfigurable) {
+		this.nonConfigurable = nonConfigurable;
 	}
 }

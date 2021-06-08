@@ -34,6 +34,8 @@
  *  19 March 2019 - Support for operation in multi-lingual environments
  * 
  *  18 October 2019 - Support for different data encodings
+ *
+ *  28 October 2020 - Support for specifying sort direction
  */
  
 package org.displaytag.tags;
@@ -1099,6 +1101,11 @@ public class TableTag extends HtmlTableTag
                 paramOrder = this.defaultSortOrder;
             }
 
+			SortOrderEnum orderEnum = tableModel.getDefaultTableSortDirection();
+			Integer sortColumnIndx = getFromRequestOrSession(request, requestHelper, TableTagParameters.PARAMETER_SORT);
+			if (orderEnum != null && sortColumnIndx == null) {
+				paramOrder = orderEnum;
+			}
             boolean order = SortOrderEnum.DESCENDING != paramOrder;
             this.tableModel.setSortOrderAscending(order);
         }

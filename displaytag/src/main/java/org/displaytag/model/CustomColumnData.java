@@ -41,6 +41,8 @@ public class CustomColumnData implements Comparable<CustomColumnData> {
 	private String sortOnProperty;
 	private int maxLength = 0;
 	private boolean isAdded = false;
+	private boolean nonConfigurable = false;
+	private String sortDirection;
 	
 	
 	public CustomColumnData(JsonObject jsonObject) {
@@ -54,6 +56,8 @@ public class CustomColumnData implements Comparable<CustomColumnData> {
 		this.sortOnProperty = getStringValue(jsonObject, "sortProperty");
 		this.maxLength = getIntValue(jsonObject, "maxLength");
 		this.isAdded = getBooleanValue(jsonObject, "isAdded");
+		this.nonConfigurable = getBooleanValue(jsonObject, "nonConfigurable");
+		this.sortDirection = getStringValue(jsonObject, "sortDirection");
 	}
 	
 	
@@ -63,6 +67,7 @@ public class CustomColumnData implements Comparable<CustomColumnData> {
 		columnTag.setSortable(sortable);
 		columnTag.setSortProperty(sortOnProperty);
 		columnTag.setMaxLength(maxLength);
+		columnTag.setNonConfigurable(nonConfigurable);
 	}
 	
 	public String getTitle() {
@@ -161,5 +166,23 @@ public class CustomColumnData implements Comparable<CustomColumnData> {
 
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
+	}
+	
+	public boolean isNonConfigurable() {
+		return nonConfigurable;
+	}
+
+	public void setNonConfigurable(boolean nonConfigurable) {
+		this.nonConfigurable = nonConfigurable;
+	}
+
+
+	public String getSortDirection() {
+		return sortDirection;
+	}
+
+
+	public void setSortDirection(String sortDirection) {
+		this.sortDirection = sortDirection;
 	}
 }

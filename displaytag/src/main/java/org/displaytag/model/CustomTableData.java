@@ -20,7 +20,10 @@
  *
  *
  *  27 April 2018 - Ability to customize the set of columns displayed
- *        and their order  
+ *        and their order
+ *  
+ *   2 April 2021 - Fixed an issue where setting a sort direction on
+ *        a column would not cause the column to be highlighted 
  */
 
 package org.displaytag.model;
@@ -43,6 +46,7 @@ import com.google.gson.JsonObject;
 public class CustomTableData {
 	private Long recnum;
 	private String defaultTableSortProperty;
+	private String defaultTableSortDirection;
 	private Integer defaultTableSortColumnIndex; // need this for local sorts
 	
 	private Map<String, CustomColumnData> columnConfigByCotsTitle = new LinkedHashMap<>(0);
@@ -79,11 +83,15 @@ public class CustomTableData {
 		if (!(tableCustomization.get("defaultTableSortProperty") instanceof JsonNull)) {
 			defaultTableSortProperty = tableCustomization.get("defaultTableSortProperty").getAsString();
 			for (int i = 0; i < visibleColumnList.size(); i++) {
-				if (StringUtils.equals(defaultTableSortProperty, visibleColumnList.get(i).getSortOnProperty())) {
+				if (!StringUtils.isEmpty(defaultTableSortProperty) && !StringUtils.isEmpty(visibleColumnList.get(i).getSortOnProperty()) && defaultTableSortProperty.startsWith(visibleColumnList.get(i).getSortOnProperty())) {
 					defaultTableSortColumnIndex = i;
 					break;
 				}
 			}
+		}
+		
+		if (!(tableCustomization.get("defaultTableSortDirection") instanceof JsonNull)) {
+			defaultTableSortDirection = tableCustomization.get("defaultTableSortDirection").getAsString();
 		}
 	}
 	
@@ -114,5 +122,13 @@ public class CustomTableData {
 
 	public Integer getDefaultTableSortColumnIndex() {
 		return defaultTableSortColumnIndex;
+	}
+
+	public String getDefaultTableSortDirection() {
+		return defaultTableSortDirection;
+	}
+
+	public void setDefaultTableSortDirection(String defaultTableSortDirection) {
+		this.defaultTableSortDirection = defaultTableSortDirection;
 	}
 }

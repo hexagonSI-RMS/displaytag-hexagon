@@ -18,7 +18,10 @@
  *        table headers by adding two new attributes: groupTitle 
  *        and groupTitleKey
  *
- *  27 April 2018 - Add ability to customize set of columns and their order  
+ *  27 April 2018 - Add ability to customize set of columns and their order
+ *
+ *   2 April 2021 - Fixed an issue where setting a sort direction on a
+ *        column would not highlight the column.
  */
 package org.displaytag.model;
 
@@ -41,6 +44,7 @@ import org.displaytag.decorator.DisplaytagColumnDecorator;
 import org.displaytag.decorator.EscapeXmlColumnDecorator;
 import org.displaytag.decorator.TableDecorator;
 import org.displaytag.properties.MediaTypeEnum;
+import org.displaytag.properties.SortOrderEnum;
 import org.displaytag.properties.TableProperties;
 import org.displaytag.tags.DataGridCustomiztionUtil;
 import org.displaytag.tags.TableTag;
@@ -182,11 +186,38 @@ public class TableModel
     	
     	if (sortedProperty != null ) {
 			if (headerCell.getSortProperty() != null)
-				return StringUtils.equalsIgnoreCase(headerCell.getSortProperty(), sortedProperty);
+				return StringUtils.equalsIgnoreCase(headerCell.getSortProperty().split("._tr")[0], sortedProperty.split("._tr")[0]);
 			else
-				return StringUtils.equalsIgnoreCase(headerCell.getBeanPropertyName(), sortedProperty);
+				return StringUtils.equalsIgnoreCase(headerCell.getBeanPropertyName(), sortedProperty.split("._tr")[0]);
     	}
     	return false;
+    }
+    
+	// Add support for a "non-configurable" header cell, such as a checkbox.
+	private void addNonConfigurableFirstHeaderCell(List<HeaderCell> newHeaderCellList) {
+    	if (this.headerCellList == null || this.headerCellList.isEmpty())
+    		return;
+    	
+		HeaderCell firstCell = (HeaderCell) this.headerCellList.get(0);
+		
+		if (firstCell.isNonConfigurable() && firstCell.getTitle() != null) {
+			String cellTitle = firstCell.getTitle().replaceAll("\\s\\s+", " ");
+			
+			if (cellTitle.startsWith("<input type=\"checkbox\"")) {
+				
+				boolean found = false;
+				for (CustomColumnData colConfig : this.applicationCustomTableData.getVisibleColumnList()) {
+					String cotsTitle = colConfig.getCotsTitle();
+					if (StringUtils.equals(cotsTitle, cellTitle)) {
+						found = true;
+						break;
+					}
+		    	}
+    			
+	    		if (!found) 
+	    			newHeaderCellList.add(firstCell);
+			}
+		}
     }
     
     public void applyApplicationCustomizations(Comparator defaultColumnComparator) {
@@ -194,7 +225,7 @@ public class TableModel
     	
     	// reorder headers:
 		List<HeaderCell> newHeaderCellList = new ArrayList<>();
-		
+		addNonConfigurableFirstHeaderCell(newHeaderCellList);		
 		for (CustomColumnData colConfig : applicationCustomTableData.getVisibleColumnList()) {
 			HeaderCell headerCell = colConfig.getIsAdded() 
 									? createHeaderCell(colConfig, defaultColumnComparator)
@@ -248,7 +279,7 @@ public class TableModel
 				 header.setColumnNumber(columnNumber);
 				 // System.out.println("columnNumber: " + columnNumber, header.getBeanPropertyName: " + header.getBeanPropertyName());
 			    
-				 if (!header.getCustomColumnData().getIsAdded()) { 
+				 if (header.isNonConfigurable() || !header.getCustomColumnData().getIsAdded()) { 
 					 // COTS column, cell data is already evaluated if there's body content (JSP), so copy it over
 					 Cell cell = header.getCellAtRow(rowIndex); 
 					 newCellList.add(cell);
@@ -310,11 +341,6 @@ public class TableModel
 		return null;
 	}
 	
-//    private boolean isSelectBox(String title) {
-//    	return StringUtils.indexOf(title, "<div>Select</div>") != -1;
-//    }
-    
-    
     /**
      * Returns the jsp page context.
      * @return page context
@@ -905,6 +931,18 @@ public class TableModel
 	public Integer getDefaultTableSortColumnIndex() {
 		if (this.applicationCustomTableData == null) return null;
 		return applicationCustomTableData.getDefaultTableSortColumnIndex();
+	}
+	
+	public SortOrderEnum getDefaultTableSortDirection() {
+		if (this.applicationCustomTableData == null)
+			return null;
+
+		String defaultSortDir = applicationCustomTableData.getDefaultTableSortDirection();
+		if (defaultSortDir == null)
+			return null;
+
+		return defaultSortDir != null && defaultSortDir.equals("asc") ? SortOrderEnum.ASCENDING
+				: SortOrderEnum.DESCENDING;
 	}
 
 	public String getPaginatedListSortProperty() {

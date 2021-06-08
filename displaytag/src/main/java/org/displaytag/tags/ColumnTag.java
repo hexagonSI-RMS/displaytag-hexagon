@@ -33,6 +33,9 @@
  *        customizing set of columns displayed. 
  * 
  *  19 March 2019 - Additional changes to support operation in multi-lingual environments
+ *
+ *   2 April 2021 - Added support for columns (such as initial checkbox column) that
+ *        should not be treated as "customizable" regarding column order or sort.
  */
 package org.displaytag.tags;
 
@@ -275,6 +278,9 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
 
     // customization done in application
     private CustomColumnData customColumnData;
+    
+    // Hexagon-added property, make the column non-customizable:
+ 	private boolean nonConfigurable;
     
     /**
      * Setter for totals.
@@ -778,6 +784,7 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
         headerCell.setHeaderAttributes((HtmlAttributeMap) this.headerAttributeMap.clone());
         headerCell.setHtmlAttributes((HtmlAttributeMap) this.attributeMap.clone());
         headerCell.setTitle(evalTitle);
+        headerCell.setNonConfigurable(this.nonConfigurable);
         headerCell.setTitleKey(this.titleKey);
         headerCell.setSortable(this.sortable);
 
@@ -1034,7 +1041,12 @@ public class ColumnTag extends BodyTagSupport implements MediaUtil.SupportsMedia
             .append("alreadySorted", this.alreadySorted) //$NON-NLS-1$
             .append("sortProperty", this.sortProperty) //$NON-NLS-1$
             .append("defaultSortOrder", this.defaultorder) //$NON-NLS-1$
+            .append("nonConfigurable", this.nonConfigurable)
             .toString();
     }
 
+	public void setNonConfigurable(boolean nonConfigurable) {
+		this.nonConfigurable = nonConfigurable;
+	}
+    
 }

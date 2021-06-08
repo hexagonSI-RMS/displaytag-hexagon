@@ -16,6 +16,13 @@
  *
  *  23 May 2018 - corrected some issues that could occur with customized
  *     tables.
+ *
+ *   6 Mar 2019 - Add support for multi-lingual operation
+ * 
+ *  16 Oct 2019 - Improve support for Right-To-Left languages
+ *
+ *  18 Oct 2019 - When looking for matching header cel for an item, use
+ *     "title" value directly if "titleKey" is not avaiable.
  */
 package org.displaytag.tags;
 

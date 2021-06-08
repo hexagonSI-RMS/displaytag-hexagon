@@ -309,6 +309,14 @@
       attribute is null, then the results of evaluating the JSP body of the tag.
     </description>
     <attribute>
+      <name>nonConfigurable</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <description>
+        If nonConfigurable is set to true, the data grid column cannot be customized in UI Customization Mode.
+      </description>
+    </attribute>    
+    <attribute>
       <name>property</name>
       <required>false</required>
       <rtexprvalue>true</rtexprvalue>

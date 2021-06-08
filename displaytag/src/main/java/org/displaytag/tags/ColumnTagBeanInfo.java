@@ -18,6 +18,9 @@
  *        table headers by adding two new attributes: groupTitle 
  *        and groupTitleKey
  *  
+ *  31 July 2020 - Added support for columns (such as initial checkbox column)
+ *        that should not be treated as "configurable" as to 
+ *        order/position or sorting.
  */
 package org.displaytag.tags;
 
@@ -47,6 +50,11 @@ public class ColumnTagBeanInfo extends SimpleBeanInfo
 
         try
         {
+        	// Hexagon-added property
+            proplist.add(new PropertyDescriptor("nonConfigurable",
+                ColumnTag.class,
+                null,
+                "setNonConfigurable"));
             proplist.add(new PropertyDescriptor("autolink", //$NON-NLS-1$
                 ColumnTag.class,
                 null,

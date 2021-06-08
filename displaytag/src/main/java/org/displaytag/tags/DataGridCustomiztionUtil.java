@@ -23,7 +23,9 @@
  *        and their order
  *  
  *  23 May 2018 - Corrected some failures / errors that could occur with
- *        table customization  
+ *        table customization
+ *
+ *  28 Oct 2020 - Added abiliy to set sort order in column  
  */
 
 package org.displaytag.tags;
@@ -203,14 +205,19 @@ public class DataGridCustomiztionUtil {
 			   + "data-hidden='%s' "
 			   + "data-sortable='%s' "
 			   + "data-sortproperty='%s' " 
+			   + "data-sortDirection='%s' "
 			   + "data-maxlength='%s' "
+			   + "data-nonConfigurable='%s' "
 			   + "data-iscustomcolumn='%s'></div>";
 	public static String getEditControl(HeaderCell headerCell) {
 		String title = headerCell.getTitle();
-		if (title == null || isSelectBox(title)) return "";
+		if (title == null || isSelectBox(title))
+			return "";
 		
 		CustomColumnData customColumnData = headerCell.getCustomColumnData();
 		if (customColumnData != null) {
+			if(customColumnData.isNonConfigurable() != headerCell.isNonConfigurable())
+				customColumnData.setNonConfigurable(headerCell.isNonConfigurable());
 			return String.format(editCtrl_cust_col,
 								customColumnData.getRecnum(),
 								StringEscapeUtils.escapeXml(customColumnData.getTitle()),
@@ -218,7 +225,9 @@ public class DataGridCustomiztionUtil {
 								customColumnData.isHidden(),
 								customColumnData.getSortable(), // original: headerCell.getBeanPropertyName() != null ? headerCell.getSortable() : customColumnData.getSortable(), 
 								customColumnData.getSortOnProperty(),
+								customColumnData.getSortDirection(),
 								customColumnData.getMaxLength(),
+								customColumnData.isNonConfigurable(),
 								customColumnData.getIsAdded()
 								);
 		} else {
@@ -229,7 +238,9 @@ public class DataGridCustomiztionUtil {
 					"false",
 					headerCell.getSortable(),
 					headerCell.getSortProperty() != null ? headerCell.getSortProperty() : headerCell.getBeanPropertyName(),
+					"",
 					headerCell.getMaxLength() == 0 ? "null" : headerCell.getMaxLength(),
+					headerCell.isNonConfigurable(),
 					"false"
 					);
 		}
@@ -249,7 +260,9 @@ public class DataGridCustomiztionUtil {
 		 					"true", //hidden
 		 					columnData.getSortable(),
 		 					columnData.getSortOnProperty(),
+		 					columnData.getSortDirection(),
 		 					columnData.getMaxLength(),
+		 					columnData.isNonConfigurable(),
 		 					columnData.getIsAdded() // iscustom-added column
  					);
         	 result.add(data);

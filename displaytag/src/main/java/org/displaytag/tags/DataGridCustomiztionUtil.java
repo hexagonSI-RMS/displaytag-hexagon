@@ -33,11 +33,9 @@ package org.displaytag.tags;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
 import org.apache.commons.lang.StringEscapeUtils;
@@ -45,14 +43,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.displaytag.model.Cell;
-import org.displaytag.model.Column;
 import org.displaytag.model.CustomColumnData;
 import org.displaytag.model.CustomTableData;
 import org.displaytag.model.HeaderCell;
-import org.displaytag.model.Row;
-import org.displaytag.model.TableModel;
-import org.displaytag.util.HtmlAttributeMap;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

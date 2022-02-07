@@ -1100,7 +1100,7 @@ public class TableTag extends HtmlTableTag
             {
                 paramOrder = this.defaultSortOrder;
             }
-
+           
 			SortOrderEnum orderEnum = tableModel.getDefaultTableSortDirection();
 			Integer sortColumnIndx = getFromRequestOrSession(request, requestHelper, TableTagParameters.PARAMETER_SORT);
 			if (orderEnum != null && sortColumnIndx == null) {
@@ -1393,15 +1393,18 @@ public class TableTag extends HtmlTableTag
             this.tableModel.setTableDecorator(tableDecorator);
         }
 
-        // DISPL-409: Wrong sorting column in export
-        // addedd by g.agnelli on 18-oct-2006#START
-        int numHideColumn=0;
-        if(this.getAttributeMap().containsKey("numHideColumn"))
-        	numHideColumn=Integer.parseInt(this.getAttributeMap().get("numHideColumn").toString());
+        MediaTypeEnum currentMediaType = (MediaTypeEnum) this.pageContext.findAttribute(TableTag.PAGE_ATTRIBUTE_MEDIA);
+        if (MediaTypeEnum.HTML != currentMediaType) {
+			// DISPL-409: Wrong sorting column in export
+			// addedd by g.agnelli on 18-oct-2006#START
+			int numHideColumn=0;
+			if(this.getAttributeMap().containsKey("numHideColumn"))
+				numHideColumn=Integer.parseInt(this.getAttributeMap().get("numHideColumn").toString());
 
-        if(numHideColumn>0)
-        	this.getTableModel().setSortedColumnNumber( this.getTableModel().getSortedColumnNumber()-numHideColumn);
-        // addedd by g.agnelli on 18-oct-2006#END
+			if(numHideColumn>0)
+				this.getTableModel().setSortedColumnNumber( this.getTableModel().getSortedColumnNumber()-numHideColumn);
+			// addedd by g.agnelli on 18-oct-2006#END
+        }
         
         
         /** apply customizations if there is any, need to do this before the rows are sorted in setupViewableData() (for local sorts), 
@@ -1409,7 +1412,7 @@ public class TableTag extends HtmlTableTag
         this.tableModel.applyApplicationCustomizations(this.getProperties().getDefaultComparator());
 
         setupViewableData();
-
+        
         // Figure out how we should sort this data, typically we just sort
         // the data being shown, but the programmer can override this behavior
         if (this.paginatedList == null && this.tableModel.isLocalSort())
